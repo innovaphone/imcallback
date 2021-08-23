@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<voicemail >
+
+    <!-- =======================  IM-Callback inno srl 2009 =============================== -->
+    <function define="Main">
+	<event type="timer" name="vbguard">
+	<if cond="$cn">
+  		<pbx-im cgpn="$Caller" e164="$client" text="$Mess"/>
+  	</if>
+  	<pbx-disc /> 
+  	</event>
+	<event type="call-end">
+ 	<if cond="$cn">
+  		<pbx-im cgpn="$Caller" e164="$client" text="$Mess"/>
+  	</if>
+  	</event>
+  	<timer name="vbguard" sec="60" /> 
+	<pbx-getcallinfo out-cgpn="$cgpn" out-cdpn="$cdpn" out-leg2="$leg2" />
+	<assign out="$Caller" value="$leg2" />
+        <assign out="$Called" value="$cgpn" />
+        <assign out="$client" value="" />
+        <assign out="$done" value="" />
+	<event type="dtmf" block="false">
+  		<if notcond="$done">
+			<timer name="vbguard" sec="60" /> 
+  			<pbx-getdtmfdigit out-dtmf="$dtmf" />
+			<lib-strcat string="$client" string2="$dtmf" out-string="$client" /> 
+			<pbx-finduser-e164 e164="$client" out-cn="$cn"/>
+			<if cond="$cn">
+    				<assign out="$Mess" value="Please recall!       Message from " />
+				<lib-strcat string="$Mess" string2="$Called" out-string="$Mess" />
+				<store-get root="" name="reminder.$coder" out-url="$ctrl" /> 
+				<assign out="$done" value="true" />
+  				<pbx-prompt url="$ctrl" />
+			</if>
+		</if>
+	 </event>
+	<while notcond="$menu-ok">
+  		<store-get root="" name="silence.$coder" out-url="$ctrl" /> 
+  		<assign out="$Teiln-timeout" value="true" /> 
+  		<pbx-prompt url="$ctrl" sec="4" repeat="true" /> 
+  	</while>
+    </function>
+
+</voicemail>
+
+<!-- Instant Messaging Call Back wiki-src/xml/IMcallback 1,0,0,0 (C) innovaphone AG 2010-2010 -->
